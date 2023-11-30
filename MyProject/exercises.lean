@@ -121,31 +121,38 @@ theorem bisimulation_proof_two : is_bisimulation R := by
           apply Exists.intro State.s2
           exact ⟨Transition.s1_to_s2 , rfl⟩
           -- attempt for 1
-    case s2 =>
-      apply And.intro
-      case left =>
-        intro s₁' h₁
-        cases h₁
-        case s1_to_s2 =>
-          apply Exists.intro State.s2
-          apply And.intro
-          case left => exact Transition.s1_to_s2
-          case right => rfl
-        case s2_to_s1 =>
-          apply Exists.intro State.s1
-          apply And.intro
-          case left => exact Transition.s2_to_s1
-          case right => rfl
-      case right =>
-        intro s₂'
-        cases s₂'
-        case s1 =>
-          intro h₁
+  case s2 =>
+    apply And.intro
+    case left =>
+      intro s₁' h₁
+      cases h₁
+      case s2_to_s1 =>
+        apply Exists.intro State.s1
+        apply And.intro
+        case left =>
+          cases s₂
+          case s1 => contradiction
+          case s2 => exact Transition.s2_to_s1
+        case right => rfl
+    case right =>
+      intro s₂' h1
+      cases h1
+      case s1_to_s2 =>
+        apply Exists.intro State.s1
+        apply And.intro
+        case left =>
+          exact Transition.s2_to_s1
+        case right =>
           contradiction
-        case s2 =>
-          intro h₁
-          apply Exists.intro State.s2
-          exact ⟨Transition.s1_to_s2, rfl⟩
+      case s2_to_s1 =>
+        apply Exists.intro State.s1
+        apply And.intro
+        case left =>
+          exact Transition.s2_to_s1
+        case right =>
+          rfl
+
+
     -- Exercise 1: try to complete on your own
 
 
@@ -153,7 +160,7 @@ theorem bisimulation_proof_two : is_bisimulation R := by
 
 -- Execrcise 2 : Complete the more general version
 
-theorem bisimulation_proof_general {StateSpace : Type} {T : Type} (R : StateSpace → StateSpace → Prop) (TransitionFunction : StateSpace → StateSpace → Prop) : Prop :=
+theorem bisimulation_proof_general {StateSpace : Type} (R : StateSpace → StateSpace → Prop) (TransitionFunction : StateSpace → StateSpace → Prop) : Prop :=
   ∀ (s₁ s₂ : StateSpace),
     R s₁ s₂ →
     (∀ (s₁' : StateSpace),
@@ -170,16 +177,47 @@ theorem bisimulation_proof_general {StateSpace : Type} {T : Type} (R : StateSpac
 --          Define bisimulation for transition systems of the following type:  State -> ℕ × State
 
 
-def PState := State → Prop
 
-def bisimulation_PState (R : PState → PState → Prop) : Prop :=
+def transition_function : State → Nat × State :=
+  λ (s : State) => match s with
+                  | State.s1 => ( 1 , State.s2)
+                  | State.s2 => ( 1 , State.s1)
+
+
+def bisimulation_of_stream_systems (R : State × State → Prop) : Prop :=
   ∀ (s₁ s₂ : State),
-    R (λ x, x = s₁) (λ x, x = s₂) →
-    (∀ (s₁' : State),
-      Transition s₁ s₁' →
-      ∃ (s₂' : State),
-        Transition s₂ s₂' ∧ R (λ x, x = s₁') (λ x, x = s₂')) ∧
-    ∀ (s₂' : State),
-      Transition s₂ s₂' →
-      ∃ (s₁' : State),
-        Transition s₁ s₁' ∧ R (λ x, x = s₁') (λ x, x = s₂')
+    R (s₁ , s₂) →
+      let (output1, next1) := transition_function (s₁);
+      let (output2, next2) := transition_function (s₂);
+        output1 = output2 ∧ R (next1 , next2)
+
+
+def bisim2 : (State × State → Prop) :=
+  λ ((s₁ , s₂ ) : State × State) => s₁ = s₂
+
+theorem bisim_proof_2 : bisimulation_of_stream_systems bisim2 := by
+  intro s₁ s₂
+  intro assume_related
+  cases s₁
+  all_goals (cases s₂)
+  case s1.s2 =>
+    contradiction
+  case s2.s1 =>
+    contradiction
+  case s1.s1 =>
+    apply And.intro
+    case left =>
+      rfl
+    case right =>
+      rfl
+  case s2.s2 =>
+    apply And.intro
+    all_goals rfl
+
+-- Exercise1: Make transitition systems generic in state spaace and transition funciton
+
+-- Exercise 2: Make bisimulation generic
+
+-- Exercise 3: Try reporoving bisimulation for the concrete transition system on the state space State and for transition function "transition_function"
+
+-- Exiercise 4(*) - Go intro Rutten notes, find some stream systems he shows is bisimiliar and implement it and prove the bisimilarity using Lean
