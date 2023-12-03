@@ -27,9 +27,15 @@ def is_bisimulation (R : State → State → Prop) : Prop :=
 
 def is_bisimulation2 (StateSpace : Type) (TransitionFunction : StateSpace → StateSpace → Prop) (R : StateSpace → StateSpace → Prop) : Prop :=
   ∀ (s₁ s₂ : StateSpace),
-  R s₁ s₂ →
-  sorry
-
+    R s₁ s₂ →
+    (∀ (s₁' : StateSpace),
+      TransitionFunction s₁ s₁' →
+      ∃ (s₂' : StateSpace),
+        TransitionFunction s₂ s₂' ∧ R s₁' s₂') ∧
+    ∀ (s₂' : StateSpace),
+      TransitionFunction s₂ s₂' →
+      ∃ (s₁' : StateSpace),
+        TransitionFunction s₁ s₁' ∧ R s₁' s₂'
 
 
 #check And.intro
@@ -216,7 +222,76 @@ theorem bisim_proof_2 : bisimulation_of_stream_systems bisim2 := by
 
 -- Exercise1: Make transitition systems generic in state spaace and transition funciton
 
+
+theorem bisimulation_generic : is_bisimulation2 State Transition R := by
+  intro s₁ s₂ h
+  apply And.intro
+  case left =>
+    intro s₁' h₁
+    cases h₁
+    case s1_to_s2 =>
+      apply Exists.intro State.s2
+      apply And.intro
+      case left =>
+        cases s₂
+        case s1 =>
+          exact Transition.s1_to_s2
+        case s2 =>
+          contradiction
+      case right =>
+        rfl
+    case s2_to_s1 =>
+      apply Exists.intro State.s1
+      apply And.intro
+      case left =>
+        cases s₂
+        case s1 =>
+          contradiction
+        case s2 =>
+          exact Transition.s2_to_s1
+      case right =>
+        rfl
+  case right =>
+    intro s₂' h₂
+    cases h₂
+    case s1_to_s2 =>
+      apply Exists.intro State.s2
+      apply And.intro
+      case left =>
+        cases s₁
+        case s1 =>
+          exact Transition.s1_to_s2
+        case s2 =>
+          contradiction
+      case right =>
+        rfl
+    case s2_to_s1 =>
+      apply Exists.intro State.s1
+      apply And.intro
+      case left =>
+        cases s₁
+        case s1 =>
+          contradiction
+        case s2 =>
+          exact Transition.s2_to_s1
+      case right =>
+        rfl
+
 -- Exercise 2: Make bisimulation generic
+
+theorem bisimulation_exercise2 {StateSpace : Type} (R : StateSpace → StateSpace → Prop)
+  (TransitionFunction : StateSpace → StateSpace → Prop) : Prop :=
+  ∀ (s₁ s₂ : StateSpace),
+    R s₁ s₂ →
+    (∀ (s₁' : StateSpace),
+      TransitionFunction s₁ s₁' →
+      ∃ (s₂' : StateSpace),
+        TransitionFunction s₂ s₂' ∧ R s₁' s₂') ∧
+    ∀ (s₂' : StateSpace),
+      TransitionFunction s₂ s₂' →
+      ∃ (s₁' : StateSpace),
+        TransitionFunction s₁ s₁' ∧ R s₁' s₂'
+
 
 -- Exercise 3: Try reporoving bisimulation for the concrete transition system on the state space State and for transition function "transition_function"
 
