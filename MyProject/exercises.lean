@@ -294,5 +294,64 @@ theorem bisimulation_exercise2 {StateSpace : Type} (R : StateSpace → StateSpac
 
 
 -- Exercise 3: Try reporoving bisimulation for the concrete transition system on the state space State and for transition function "transition_function"
+-- all i did was apply theorms, and went case by case and continued applying, i really wasn't sure how to approach this.
+theorem bisimulation_exercise3 : is_bisimulation2 State (λ s, (1, transition_function s)) R := by
+  intro s₁ s₂ h
+  apply And.intro
+
+  case left =>
+    intro s₁' h₁
+    cases h₁
+    case s1_to_s2 =>
+      apply Exists.intro State.s2
+      apply And.intro
+      case left =>
+        cases s₂
+        case s1 =>
+          exact Transition.s1_to_s2
+        case s2 =>
+          contradiction
+      case right =>
+        rfl
+
+    case s2_to_s1 =>
+      apply Exists.intro State.s1
+      apply And.intro
+      case left =>
+        cases s₂
+        case s1 =>
+          contradiction
+        case s2 =>
+          exact Transition.s2_to_s1
+      case right =>
+        rfl
+
+  case right =>
+    intro s₂' h₂
+    cases h₂
+    case s1_to_s2 =>
+      apply Exists.intro State.s2
+      apply And.intro
+      case left =>
+        cases s₁
+        case s1 =>
+          exact Transition.s1_to_s2
+        case s2 =>
+          contradiction
+      case right =>
+        rfl
+
+    case s2_to_s1 =>
+      apply Exists.intro State.s1
+      apply And.intro
+      case left =>
+        cases s₁
+        case s1 =>
+          contradiction
+        case s2 =>
+          exact Transition.s2_to_s1
+      case right =>
+        rfl
+
 
 -- Exiercise 4(*) - Go intro Rutten notes, find some stream systems he shows is bisimiliar and implement it and prove the bisimilarity using Lean
