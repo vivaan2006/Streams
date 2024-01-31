@@ -375,10 +375,6 @@ theorem bisimulation_exercise3 : is_bisimulation2 State (nondeterministic_transi
           exact t₂
           rfl
 
-
--- Exiercise 4(*) - Go intro Rutten notes, find some stream systems he shows is bisimiliar and implement it and prove the bisimilarity using Lean
-
-
 -- streams :: N ----> N
 -- head (stream) := stream 0
 -- tail (stream) := lambda n ===> stream (n+1)
@@ -387,5 +383,39 @@ theorem bisimulation_exercise3 : is_bisimulation2 State (nondeterministic_transi
 -- (stream) --> (head stream, tail stream)
 
 -- Exercise 1 : Define generic bisimulation of stream systems -- in particular make : "bisimulation_of_stream_systems" generic in type of transition function and state space
+
+-- test initial code. (not sure if this is correct)
+  -- def bisimulation_of_stream_systems_generic {statespace : Type} (R : statespace × statespace → Prop)
+  -- (TransitionFunction : statespace → Natural × statespace) : Prop :=
+  -- ∀ (s1 s2 : statespace),
+  --   R (s1, s2) →
+  --     let (output1, next1) := TransitionFunction s1;
+  --     let (output2, next2) := TransitionFunction s2;
+  --       output1 = output2 ∧ R (next1 , next2)
+
+  def bisimulation_of_stream_systems_generic {statespace : Type} (R : statespace × statespace → Prop)
+  (transition_function : statespace → Natural × statespace) : Prop :=
+  ∀ (s₁ s₂ : statespace),
+    R (s₁, s₂) →
+    let (output1, next1) := transition_function s₁;
+    let (output2, next2) := transition_function s₂;
+    output1 = output2 ∧ R (next1, next2)
+
 -- Exercise 2 : Recall the code you had for streams and equip the set of all streams with the structure of the transition system
 -- (stream) --> (head stream, tail stream)
+
+
+-- def bisimulation_of_stream_systems_transition_structure (R : State × State → Prop) : Prop :=
+--   ∀ (s₁ s₂ : State),
+--     R (s₁ , s₂) →
+--       let (output1, next1) := transition_function (s₁);
+--       let (output2, next2) := transition_function (s₂);
+--         output1 = output2 ∧ R (next1 , next2)
+
+-- unsure hwo to implment this
+def bisimulation_of_stream_systems_transition_structure (R : StreamState × StreamState → Prop) : Prop :=
+  ∀ (s₁ s₂ : StreamState),
+    R (s₁, s₂) →
+      let (output1, next1) := transition_function (s₁);
+      let (output2, next2) := transition_function (s₂);
+        output1 = output2 ∧ R (next1, next2)
