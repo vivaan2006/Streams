@@ -394,7 +394,7 @@ theorem bisimulation_exercise3 : is_bisimulation2 State (nondeterministic_transi
   --       output1 = output2 ∧ R (next1 , next2)
 
   def bisimulation_of_stream_systems_generic {statespace : Type} (R : statespace × statespace → Prop)
-  (transition_function : statespace → Natural × statespace) : Prop :=
+  (transition_function : statespace → Nat × statespace) : Prop :=
   ∀ (s₁ s₂ : statespace),
     R (s₁, s₂) →
     let (output1, next1) := transition_function s₁;
@@ -404,18 +404,58 @@ theorem bisimulation_exercise3 : is_bisimulation2 State (nondeterministic_transi
 -- Exercise 2 : Recall the code you had for streams and equip the set of all streams with the structure of the transition system
 -- (stream) --> (head stream, tail stream)
 
+def stream (α : Type) := Nat → α
 
--- def bisimulation_of_stream_systems_transition_structure (R : State × State → Prop) : Prop :=
---   ∀ (s₁ s₂ : State),
---     R (s₁ , s₂) →
---       let (output1, next1) := transition_function (s₁);
---       let (output2, next2) := transition_function (s₂);
---         output1 = output2 ∧ R (next1 , next2)
+def head (α : Type) : stream α -> α :=
+  λ (s : stream α) => s 0
 
--- unsure hwo to implment this
-def bisimulation_of_stream_systems_transition_structure (R : StreamState × StreamState → Prop) : Prop :=
-  ∀ (s₁ s₂ : StreamState),
-    R (s₁, s₂) →
-      let (output1, next1) := transition_function (s₁);
-      let (output2, next2) := transition_function (s₂);
-        output1 = output2 ∧ R (next1, next2)
+def tail (α : Type) : stream α -> stream α :=
+  λ (s : stream α) =>
+    λ (n : Nat) =>
+      s (n+1)
+
+def shift {α : Type} : stream α → Nat → stream α :=
+  λ (s : stream α) =>
+    λ (pos : Nat) =>
+      match pos with
+      | 0 => s
+      | (n' + 1) => tail α (shift s n')
+
+def shift2  {α : Type} : stream α → Nat → stream α :=
+  λ (s : stream α) =>
+    λ (pos : Nat) =>
+      λ (n : Nat) =>
+        s (n + pos)
+
+theorem shifts_are_the_same {α : Type} (pos : Nat) (s : stream α) : shift s n = shift2 s n := by
+  induction n
+  case zero =>
+    simp [shift2, shift]
+  case succ n' ih =>
+    simp [shift, ih, tail, shift2]
+    have t' : Nat.succ n' =  n' +1 := by simp
+    simp [t']
+    sorry
+
+-- homework: finish this lemma
+
+
+theorem head_of_shift
+  {α : Type} : ∀ (pos : Nat), ∀ (s : stream α), s pos = (head α (shift2 s pos)) := by
+    intro pos
+    intro stream
+    simp [head, shift2]
+
+
+
+def stream_transition_function : (stream Nat) → (Nat × stream Nat) :=
+  λ (s : stream Nat) => (head (Nat) s , tail (Nat) s)
+
+theorem one_step_bisimilarity_implies_n_step_bisimilarity :
+(R : stream Nat × stream Nat → Prop)
+→ @bisimulation_of_stream_systems_generic (stream Nat) R stream_transition_function
+→ ∀ {x y : stream Nat}, ∀ {n : Nat}, R (x , y) → R (shift x n, shift y n) := by
+  sorry
+
+-- homework 2 : attempt to prove this lemma
+-- you should use induction on n 
