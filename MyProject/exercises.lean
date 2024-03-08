@@ -1,3 +1,6 @@
+import Mathlib.Tactic.Linarith
+
+def hello := "world"
 inductive State
 | s1
 | s2
@@ -427,23 +430,31 @@ def shift2  {α : Type} : stream α → Nat → stream α :=
       λ (n : Nat) =>
         s (n + pos)
 
+theorem sublemma {α : Type} (pos : Nat) (s : stream α) : tail α (shift2 s pos) = (shift2 s (pos + 1)) := 
+  by
+    induction pos
+    case zero =>
+      rfl
+    case succ n' ih =>
+      apply funext
+      intro x
+      simp [tail, shift2, Nat.succ]
+      have t : x + 1 + Nat.succ n' = x + (Nat.succ n' + 1) := by linarith
+      simp [t]
+      
+      
+  
+
+
 theorem shifts_are_the_same {α : Type} (pos : Nat) (s : stream α) : shift s n = shift2 s n := by
   induction n
   case zero =>
     simp [shift2, shift]
+    rfl
   case succ n' ih =>
-    simp [shift, ih, tail, shift2]
-    have t' : Nat.succ n' = n' + 1 := by simp
+    simp [shift, ih]
+    apply sublemma
 
-    congr (fun n => s (n + (n' + 1)))
-      rewrite [add_assoc]
-      simp [t']
-      refl
-
-
-
-
--- homework: finish this lemma
 
 
 theorem head_of_shift
@@ -451,7 +462,6 @@ theorem head_of_shift
     intro pos
     intro stream
     simp [head, shift2]
-
 
 
 def stream_transition_function : (stream Nat) → (Nat × stream Nat) :=
@@ -464,29 +474,19 @@ theorem one_step_bisimilarity_implies_n_step_bisimilarity :
   (R : stream Nat × stream Nat → Prop) →
   @bisimulation_of_stream_systems_generic (stream Nat) R stream_transition_function →
   ∀ {x y : stream Nat}, ∀ {n : Nat}, R (x , y) → R (shift x n, shift y n) := by
-
+  intro R
+  intro R_is_a_bisimulation
+  intro s1 s2 n
+  intro s1_and_s2_are_related
   induction n
   case zero =>
-      intros R bisim x y H
-      exact bisim x y
-
-  case succ n' =>
-      intros R bisim x y H
-      have a : R (shift x n', shift y n') :=
-      from bisim (x, y) (H)
-        have : @stream_transition_function stream Nat R x = shift y n' := by
-
-        intro z,
-        cases (stream_transition_function stream Nat R x) with (y' _) =>
-          subst y',
-          exact (bisim_property x y)
-
-        inl h =>
-          contradiction
-      have : R (shift (shift x n') 1, shift (shift y n') 1) :=
-        from a (R (shift x n', shift y n'))
-      subst (shift x n') (shift y n')
-      refl
+    simp [shift]
+    exact s1_and_s2_are_related
+  case succ n' ih =>
+    simp [shift]
+    have t := R_is_a_bisimulation (shift s1 n') (shift s2 n') ih
+    simp [stream_transition_function] at t
+    apply And.right t
 
 
 
@@ -494,3 +494,11 @@ theorem one_step_bisimilarity_implies_n_step_bisimilarity :
 
 -- homework 2 : attempt to prove this lemma
 -- you should use induction on n
+
+
+
+theorem bisimilarity_implies_equality :
+(R  : stream Nat × stream Nat → Prop)
+→ @bisimulation_of_stream_systems_generic (stream Nat)  R stream_transition_function
+→ ∀ {x y : stream Nat}, R (x , y) → x = y := by
+  sorry
